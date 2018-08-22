@@ -10,6 +10,7 @@ import Candle_Manager
 import InstanceHolder
 import Trading_Manager
 import Trade_Logger
+import API_Manager
 
 class MainWindow(Ui_MainWindow,QtWidgets.QMainWindow):
 
@@ -43,18 +44,19 @@ class MainWindow(Ui_MainWindow,QtWidgets.QMainWindow):
 
     def on_timertick(self):
         if self.workqueue.empty() is not True:
-            task = self.workqueue.get()
-            if task == 'new_price':
-                Trading_Manager.on_newprice()
-                self.plot_currentIndicator()
+            task = self.workqueue.get()          
             if task == 'new_candle':
                 Trading_Manager.on_newcandle()
+                self.plot_currentIndicator()
     
     def add_queueitem(self, task):
         self.workqueue.put(task)
 
     def startTrading(self):
         symbol, interval = XML_Parser.get_symbolandinterval(self.xmlurl)
+        API_Manager.set_newexchange("bitmex","","")
+        API_Manager.open_klinesstream(symbol)
+        Trade_Logger.clear_log()
         Trading_Manager.startTrading(symbol, interval)
 
     def plot_currentIndicator(self):
@@ -66,9 +68,7 @@ class MainWindow(Ui_MainWindow,QtWidgets.QMainWindow):
 
 if __name__ == '__main__':  
     app = QtWidgets.QApplication(sys.argv)
-    app.setApplicationName("CryptoPrinter") 
-    Trading_Manager.instantiate_newexchange("bitmex","","")
-    Trade_Logger.clear_log()
-    window = MainWindow()
+    app.setApplicationName("CryptoPrinter")
+    window = MainWindow() 
     app.exec_()
     

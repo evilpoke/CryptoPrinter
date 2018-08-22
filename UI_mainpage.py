@@ -1,5 +1,6 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from HelperClasses import Translator
+import math
 
 class IndicatorGraphicView(QtWidgets.QGraphicsView):
 
@@ -48,6 +49,9 @@ class IndicatorGraphicView(QtWidgets.QGraphicsView):
         #self.scene.addLine(self.xPos[0], self.ytrans.t(150), self.xPos[0], self.ytrans.t(-150))
 
     def plot_currentIndicator(self, indicatordata):
+        sign = lambda x: indicatordata and (1, -1) [indicatordata<0]
+        if abs(indicatordata) > 150:
+            indicatordata = 150 * sign
         yPos = self.ytrans.t(indicatordata)
         self.currentDot.setRect(self.xPos - 10, yPos - 5, 20, 10)
         pen = QtGui.QPen()

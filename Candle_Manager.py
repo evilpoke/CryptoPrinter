@@ -3,16 +3,19 @@ from classes import Candle
 import _thread as thread
 import Candle_Manager
 import InstanceHolder
+import API_Manager
 import queue
 
 __currentCandles = []
 
 def load_candles(symbol, interval='1m'):
-    candles = APIs._Binance_API.getKlines(symbol,limit=1000,interval=interval)
+    global __currentCandles
+    candles = API_Manager.get_Klines(symbol,interval)
     if(candles != None):
-        __currentCandles.clear()
+        __currentCandles.clear() 
         for candle in reversed(candles):
-            __currentCandles.append(Candle(candle[0],candle[1],candle[2],candle[3],candle[4],candle[5],candle[6],candle[8]))
+            __currentCandles.append(Candle(candle[0],candle[1],candle[2],candle[3],candle[4],candle[5]))
+        print('Loaded {} candles'.format(len(candles)))
     else:
         print('Symbol was not found')
 
@@ -27,17 +30,13 @@ def initiate_pricestream(symbol, interval='1m'):
     thread.start_new_thread(APIs._Binance_API.open_klinesstream, (symbol.lower(), interval))
 
 def close_pricestream():
-    APIs._Binance_API.close_klinestream()
+    API_Manager.close_klinestream()
 
-def pricesteam_message(data):
-    cd = data['k']
-    newcandle = Candle(cd['t'], cd['o'],cd['h'],cd['l'],cd['c'],cd['v'],cd['T'],1)
-    __currentCandles[0] = newcandle
+def on_newcandle(candle):
+    global __currentCandles
+    newcandle = Candle(candle[0],candle[1],candle[2],candle[3],candle[4],candle[5])
     mainWindow = InstanceHolder.get_instance('MainWindow')
-    if cd['x'] is True:
-        __currentCandles.insert(0,Candle(newcandle.closetime,newcandle.close,newcandle.close,newcandle.close,newcandle.close,0,0,0))  
-        if len(__currentCandles) > 1000:
-            del __currentCandles[-1]
-        mainWindow.add_queueitem('new_candle')
-    else:
-        mainWindow.add_queueitem('new_price')
+    __currentCandles.insert(0,newcandle)  
+    if len(__currentCandles) > 1000:
+        del __currentCandles[-1]
+    mainWindow.add_queueitem('new_candle')

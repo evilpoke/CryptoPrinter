@@ -1,15 +1,26 @@
 import Candle_Manager
 import datetime
-__path = "/home/manuel/projects/CryptoPrinter/log.txt"
+import os
+
+__path = ""
 __lastprice = 0
 __lastcandle = None
 
 __resprofit = 0
 
+def load_path():
+    global __path
+    __path = os.path.expanduser(os.path.join(os.path.dirname(__file__), 'log.txt'))
+    print("Loaded log file: " +  __path)
+
 def log_trade(side):
     global __lastprice
     global __lastcandle
-    global __resprofit
+    global __resprofit  
+
+    if __path == "":
+        load_path()
+
     currentcandle = Candle_Manager.get_candles(1)[0]
     file = open(__path, "a")
     if __lastprice != 0: 
@@ -29,4 +40,6 @@ def log_trade(side):
     file.close()
 
 def clear_log():
+    if __path == "":
+        load_path()
     open(__path, 'w').close()

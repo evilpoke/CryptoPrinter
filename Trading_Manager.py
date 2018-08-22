@@ -1,34 +1,19 @@
 import Candle_Manager
 import Indicator_Manager
 import Trade_Logger
+import API_Manager
 
 import numpy as np
-import ccxt
 
 __trailingvalue = {'trailing': False, 'trailvalue': 5, 'lasttrail': 0}
 
 __tradingdata = {'lastpos': 0, 'currentpos': 0}
 
-__currentexchange = None
-
 realTrading = False
 
 def startTrading(symbol, interval):
     Candle_Manager.load_candles(symbol, interval=interval)
-    Candle_Manager.initiate_pricestream(symbol, interval=interval)  
-
-def instantiate_newexchange(exchangename, key, secret):
-    exchange_class = getattr(ccxt, exchangename)
-    __currentexchange = exchange_class({
-        'apiKey': 'key',
-        'secret': 'secret',
-        'timeout': 30000,
-        'enableRateLimit': True,
-    })
-    __currentexchange.load_markets()
-    
-def on_newprice():
-    __check_indicatordata()
+    API_Manager.open_klinesstream(symbol, interval=interval)  
 
 def on_newcandle():
     __check_indicatordata()
@@ -58,7 +43,7 @@ def __trail(currentValue):
         print('New Position: ' + side)
         Trade_Logger.log_trade(side)
         if realTrading is True:
-            __currentexchange.create_order("BTCUSD", "Market", side, 0.0001)       
+            API_Manager.create_order(side)     
 
 
 
